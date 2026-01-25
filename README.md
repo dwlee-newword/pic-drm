@@ -10,7 +10,7 @@ Cloudflare Workers 환경에서 **Hono** 프레임워크를 기반으로 구축�
 - **Runtime:** [Cloudflare Workers](https://workers.cloudflare.com/)
 - **Framework:** [Hono v4](https://hono.dev/)
 - **Language:** TypeScript
-- **Package Manager:** npm (or pnpm)
+- **Package Manager:** pnpm
 
 ## 🚀 시작하기 (Getting Started)
 
@@ -19,7 +19,7 @@ Cloudflare Workers 환경에서 **Hono** 프레임워크를 기반으로 구축�
 의존성 패키지를 설치합니다.
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 로컬 개발 서버 실행 (Development)
@@ -27,15 +27,35 @@ npm install
 로컬 환경에서 개발 서버를 실행합니다.
 
 ```bash
-npm run dev
+pnpm run dev
+```
+
+### 로컬 빌드 및 검증 (Build & Verify)
+
+배포 전에 타입 체크를 수행하고, 빌드 아티팩트가 정상적으로 생성되는지 로컬에서 검증합니다.
+(실제 배포는 수행하지 않습니다.)
+
+```bash
+pnpm run build
 ```
 
 ### 배포 (Deploy)
 
-Cloudflare Workers로 프로젝트를 배포합니다.
+Cloudflare Workers로 프로젝트를 배포합니다. Cloudflare 로그인을 위한 OAuth 인증이 필요합니다.
+
+> **⚠️ 주의 사항 ⚠️**
+>
+> 해당 명령어 실행 시 바로 배포가 이루어지므로,
+>
+> - [x] main 브랜치일 때
+> - [x] 로컬 빌드, 검증이 완료되었을 때
+>
+> 배포가 이루어져야 합니다.
+>
+> **⚠️ 주의 사항 ⚠️**
 
 ```bash
-npm run deploy
+pnpm run deploy
 ```
 
 ### 타입 생성 (Type Generation)
@@ -43,7 +63,7 @@ npm run deploy
 `wrangler.jsonc` 설정을 기반으로 Cloudflare Bindings 타입을 생성합니다.
 
 ```bash
-npm run cf-typegen
+pnpm run cf-typegen
 ```
 
 ## 📂 프로젝트 구조 (Project Structure)
@@ -64,4 +84,5 @@ pic-drm/
 - **Edge Computing:** Cloudflare Workers를 통한 글로벌 엣지 배포
 
 ---
+
 > 이 프로젝트는 `pic-drm` 백엔드 전략 가이드를 따릅니다.
