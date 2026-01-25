@@ -34,3 +34,6 @@ lerna-debug.log*
 
 # pnpm
 pnpm-workspace.yaml
+
+# Agent
+GEMINI.md
