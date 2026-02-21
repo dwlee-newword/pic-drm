@@ -2,7 +2,10 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "pic-drm",
   "main": "src/index.ts",
-  "compatibility_date": "2026-01-21"
+  "compatibility_date": "2026-01-21",
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],
