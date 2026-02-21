@@ -4,8 +4,18 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-01-21",
   "vars": {
-    "ENVIRONMENT": "production"
-  }
+    "ENVIRONMENT": "production",
+    "ALLOWED_ORIGIN": "https://citrus-letter.pages.dev"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pic-drm-db",
+      // Replace with your own D1 database ID: `wrangler d1 create pic-drm-db`
+      "database_id": "YOUR_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ]
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],
