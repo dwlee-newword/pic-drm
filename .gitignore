@@ -37,3 +37,6 @@ pnpm-workspace.yaml
 
 # Agent
 GEMINI.md
+CLAUDE.md
+claude_kr.md
+.claudeignore

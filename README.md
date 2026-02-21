@@ -83,3 +83,7 @@ pic-drm/
 ---
 
 > 이 프로젝트는 `pic-drm` 백엔드 전략 가이드를 따릅니다.
+
+---
+
+© 2026 Citrus Letter. All rights reserved.
