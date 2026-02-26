@@ -28,9 +28,13 @@ export const SignupRequestSchema = z
 /** Schema for the POST /auth/signup success response body. */
 export const SignupResponseSchema = z
   .object({
-    token: z.string().openapi({
+    access_token: z.string().openapi({
       example: 'eyJhbGciOiJIUzI1NiJ9...',
-      description: 'Signed JWT valid for 7 days.',
+      description: 'Signed JWT access token valid for 15 minutes.',
+    }),
+    refresh_token: z.string().openapi({
+      example: 'eyJhbGciOiJIUzI1NiJ9...',
+      description: 'Signed JWT refresh token valid for 7 days.',
     }),
     user: UserSchema,
   })
@@ -51,13 +55,36 @@ export const LoginRequestSchema = z
 /** Schema for the POST /auth/login success response body. */
 export const LoginResponseSchema = z
   .object({
-    token: z.string().openapi({
+    access_token: z.string().openapi({
       example: 'eyJhbGciOiJIUzI1NiJ9...',
-      description: 'Signed JWT valid for 7 days.',
+      description: 'Signed JWT access token valid for 15 minutes.',
+    }),
+    refresh_token: z.string().openapi({
+      example: 'eyJhbGciOiJIUzI1NiJ9...',
+      description: 'Signed JWT refresh token valid for 7 days.',
     }),
     user: UserSchema,
   })
   .openapi('LoginResponse');
+
+/** Schema for the POST /auth/refresh request body. */
+export const RefreshRequestSchema = z
+  .object({
+    refresh_token: z.string().openapi({
+      description: 'Refresh token issued at login or signup.',
+    }),
+  })
+  .openapi('RefreshRequest');
+
+/** Schema for the POST /auth/refresh success response body. */
+export const RefreshResponseSchema = z
+  .object({
+    access_token: z.string().openapi({
+      example: 'eyJhbGciOiJIUzI1NiJ9...',
+      description: 'New access token valid for 15 minutes.',
+    }),
+  })
+  .openapi('RefreshResponse');
 
 /** Schema for a generic auth error response. */
 export const AuthErrorSchema = z
@@ -66,15 +93,25 @@ export const AuthErrorSchema = z
   })
   .openapi('AuthError');
 
-/** Shape of the decoded JWT payload stored in context by the `authenticate` middleware. */
+/** Shape of the decoded JWT payload for access tokens. */
 export type JwtPayload = {
   /** Subject — the authenticated user's email address. */
   sub: string;
   /** User's display name. */
   name: string;
+  /** Token type — must be 'access' for protected routes. */
+  type: 'access';
   /** Issued-at timestamp (Unix seconds). */
   iat: number;
   /** Expiration timestamp (Unix seconds). */
+  exp: number;
+};
+
+/** Shape of the decoded JWT payload for refresh tokens. */
+export type RefreshTokenPayload = {
+  sub: string;
+  type: 'refresh';
+  iat: number;
   exp: number;
 };
 
@@ -82,4 +119,6 @@ export type SignupRequest = z.infer<typeof SignupRequestSchema>;
 export type SignupResponse = z.infer<typeof SignupResponseSchema>;
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
+export type RefreshRequest = z.infer<typeof RefreshRequestSchema>;
+export type RefreshResponse = z.infer<typeof RefreshResponseSchema>;
 export type User = z.infer<typeof UserSchema>;

@@ -7,7 +7,8 @@ import type { Bindings, Variables } from '../types/bindings';
 
 /**
  * Type guard to ensure the raw JWT payload conforms to JwtPayload.
- * Guards against tokens that are structurally valid but missing required claims.
+ * Guards against tokens that are structurally valid but missing required claims,
+ * and rejects refresh tokens (type !== 'access') used in place of access tokens.
  */
 function isJwtPayload(value: unknown): value is JwtPayload {
   return (
@@ -15,6 +16,7 @@ function isJwtPayload(value: unknown): value is JwtPayload {
     value !== null &&
     typeof (value as Record<string, unknown>).sub === 'string' &&
     typeof (value as Record<string, unknown>).name === 'string' &&
+    (value as Record<string, unknown>).type === 'access' &&
     typeof (value as Record<string, unknown>).iat === 'number' &&
     typeof (value as Record<string, unknown>).exp === 'number'
   );
