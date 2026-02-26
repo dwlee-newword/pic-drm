@@ -6,16 +6,39 @@ import type { MiddlewareHandler } from 'hono';
 import { HealthResponseSchema } from './types/health';
 import type { Bindings, Variables } from './types/bindings';
 import { authRouter } from './routes/auth';
+import { adminAuthRouter } from './routes/adminAuth';
+import { jobsRouter } from './routes/jobs';
 
-const app = new OpenAPIHono<{ Bindings: Bindings; Variables: Variables }>();
+const app = new OpenAPIHono<{ Bindings: Bindings; Variables: Variables }>({
+  defaultHook: (result, c) => {
+    if (!result.success) {
+      return c.json(
+        { message: result.error.issues.map((i) => i.message).join(', ') },
+        400,
+      );
+    }
+  },
+});
 
 // CORS — reads allowed origin from the ALLOWED_ORIGIN environment binding.
 app.use('*', async (c, next) => {
   return cors({
     origin: c.env.ALLOWED_ORIGIN,
-    allowMethods: ['GET', 'POST', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PUT', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
   })(c, next);
+});
+
+// Security headers — applied to every response.
+app.use('*', async (c, next) => {
+  await next();
+  c.res.headers.set('X-Content-Type-Options', 'nosniff');
+  c.res.headers.set('X-Frame-Options', 'DENY');
+  c.res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  c.res.headers.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  if (c.env.ENVIRONMENT !== 'development') {
+    c.res.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
 });
 
 /** GET /health — liveness check */
@@ -77,5 +100,7 @@ app.use('/docs', devOnly);
 app.get('/docs', swaggerUI({ url: '/openapi.json' }));
 
 app.route('/', authRouter);
+app.route('/', adminAuthRouter);
+app.route('/', jobsRouter);
 
 export default app;
