@@ -1,4 +1,5 @@
 import type { JwtPayload } from './auth';
+import type { AdminJwtPayload } from './admin';
 
 /** Cloudflare Worker environment bindings available via `c.env.*`. */
 export type Bindings = {
@@ -17,6 +18,8 @@ export type Bindings = {
   ALLOWED_ORIGIN: string;
   /** Cloudflare D1 database binding. Declared in wrangler.jsonc as `"binding": "DB"`. */
   DB: D1Database;
+  /** Cloudflare R2 bucket for storing protected files. Declared in wrangler.jsonc as `"binding": "BUCKET"`. */
+  BUCKET: R2Bucket;
 };
 
 /**
@@ -26,4 +29,6 @@ export type Bindings = {
 export type Variables = {
   /** Decoded JWT payload, set by the `authenticate` middleware after successful verification. */
   jwtPayload: JwtPayload;
+  /** Decoded admin JWT payload, set by the `authenticateAdmin` middleware after successful verification. */
+  adminPayload: AdminJwtPayload;
 };
