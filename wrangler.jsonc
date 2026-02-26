@@ -15,6 +15,13 @@
       "database_id": "YOUR_D1_DATABASE_ID",
       "migrations_dir": "migrations"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      // Replace with your own R2 bucket name: `wrangler r2 bucket create pic-drm-files`
+      "bucket_name": "pic-drm-files"
+    }
   ]
   // "compatibility_flags": [
   //   "nodejs_compat"
