@@ -99,6 +99,9 @@ app.doc('/openapi.json', {
 app.use('/docs', devOnly);
 app.get('/docs', swaggerUI({ url: '/openapi.json' }));
 
+/** POST /auth/signup — disabled in non-development environments */
+app.use('/auth/signup', devOnly);
+
 app.route('/', authRouter);
 app.route('/', adminAuthRouter);
 app.route('/', jobsRouter);
