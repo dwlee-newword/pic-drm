@@ -186,7 +186,7 @@ adminAuthRouter.openapi(adminSignupRoute, async (c) => {
       .bind(email, name, passwordHash)
       .run();
   } catch (err) {
-    if (err instanceof Error && err.message.includes('UNIQUE constraint failed')) {
+    if (err instanceof Error && err.message?.includes('UNIQUE constraint failed')) {
       throw new HTTPException(409, { message: 'Email is already in use.' });
     }
     throw new HTTPException(500, { message: 'Failed to create admin account.' });
