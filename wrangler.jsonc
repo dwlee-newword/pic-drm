@@ -12,7 +12,7 @@
       "binding": "DB",
       "database_name": "pic-drm-db",
       // Replace with your own D1 database ID: `wrangler d1 create pic-drm-db`
-      "database_id": "YOUR_D1_DATABASE_ID",
+      "database_id": "441bf9e1-04bf-46b9-aab5-7db82e86c1cc",
       "migrations_dir": "migrations"
     }
   ],
