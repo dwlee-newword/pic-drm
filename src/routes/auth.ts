@@ -235,29 +235,60 @@ authRouter.openapi(signupRoute, async (c) => {
 /**
  * POST /auth/login — verifies credentials against D1 and returns an access + refresh token pair.
  * Returns 401 for both unknown email and wrong password (prevents user enumeration).
+ * Each step (DB lookup, password verification, token signing) is isolated in its own
+ * try-catch so failures are traceable to the exact stage.
  */
 authRouter.openapi(loginRoute, async (c) => {
   const { email, password } = c.req.valid('json');
 
-  const user = await c.env.DB.prepare(
-    'SELECT email, name, password_hash FROM users WHERE email = ?'
-  )
-    .bind(email)
-    .first<UserRow>();
+  // Step 1: Look up the user in D1.
+  let user: UserRow | null;
+  try {
+    user = await c.env.DB.prepare(
+      'SELECT email, name, password_hash FROM users WHERE email = ?'
+    )
+      .bind(email)
+      .first<UserRow>();
+  } catch (err) {
+    throw new HTTPException(500, {
+      message: 'Login failed: database lookup error.',
+      cause: err
+    });
+  }
 
   if (!user) {
     throw new HTTPException(401, { message: 'Invalid email or password.' });
   }
 
-  const isValid = await verifyPassword(password, user.password_hash);
+  // Step 2: Verify the submitted password against the stored PBKDF2 hash.
+  let isValid: boolean;
+  try {
+    isValid = await verifyPassword(password, user.password_hash);
+  } catch (err) {
+    throw new HTTPException(500, {
+      message: 'Login failed: password verification error.',
+      cause: err
+    });
+  }
+
   if (!isValid) {
     throw new HTTPException(401, { message: 'Invalid email or password.' });
   }
 
-  const [access_token, refresh_token] = await Promise.all([
-    buildAccessToken(user.email, user.name, c.env.JWT_SECRET),
-    buildRefreshToken(user.email, c.env.JWT_SECRET)
-  ]);
+  // Step 3: Sign the access and refresh tokens.
+  let access_token: string;
+  let refresh_token: string;
+  try {
+    [access_token, refresh_token] = await Promise.all([
+      buildAccessToken(user.email, user.name, c.env.JWT_SECRET),
+      buildRefreshToken(user.email, c.env.JWT_SECRET)
+    ]);
+  } catch (err) {
+    throw new HTTPException(500, {
+      message: 'Login failed: token signing error.',
+      cause: err
+    });
+  }
 
   return c.json(
     {
