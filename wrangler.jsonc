@@ -3,13 +3,13 @@
   "name": "pic-drm",
   "main": "src/index.ts",
   "compatibility_date": "2026-01-21",
-  "vars": {
-    "ENVIRONMENT": "production",
-    "ALLOWED_ORIGIN": "https://citrusletter.com,https://citrus-letter.pages.dev"
-  },
   "env": {
     "production": {
-      "name": "pic-drm"
+      "name": "pic-drm",
+      "vars": {
+        "ENVIRONMENT": "production",
+        "ALLOWED_ORIGIN": "https://citrusletter.com,https://citrus-letter.pages.dev"
+      }
     }
   },
   "d1_databases": [
