@@ -20,10 +20,12 @@ const app = new OpenAPIHono<{ Bindings: Bindings; Variables: Variables }>({
   },
 });
 
-// CORS — reads allowed origin from the ALLOWED_ORIGIN environment binding.
+// CORS — reads allowed origins from the ALLOWED_ORIGIN environment binding.
+// Supports a single origin or a comma-separated list (e.g. "https://a.com,https://b.com").
 app.use('*', async (c, next) => {
+  const allowedOrigins = c.env.ALLOWED_ORIGIN.split(',').map((o) => o.trim());
   return cors({
-    origin: c.env.ALLOWED_ORIGIN,
+    origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
     allowMethods: ['GET', 'POST', 'PUT', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
   })(c, next);

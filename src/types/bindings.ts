@@ -11,9 +11,10 @@ export type Bindings = {
    */
   JWT_SECRET: string;
   /**
-   * Allowed CORS origin for the frontend.
+   * Allowed CORS origins for the frontend.
+   * Supports a single origin or a comma-separated list.
    * Local dev: set in `.dev.vars` (e.g., `http://localhost:5173`).
-   * Production: set in `wrangler.jsonc vars` (e.g., `https://citrus-letter.pages.dev`).
+   * Production: set in `wrangler.jsonc vars` (e.g., `https://citrusletter.com,https://citrus-letter.pages.dev`).
    */
   ALLOWED_ORIGIN: string;
   /** Cloudflare D1 database binding. Declared in wrangler.jsonc as `"binding": "DB"`. */
