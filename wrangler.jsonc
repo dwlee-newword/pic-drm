@@ -7,6 +7,11 @@
     "ENVIRONMENT": "production",
     "ALLOWED_ORIGIN": "https://citrusletter.com,https://citrus-letter.pages.dev"
   },
+  "env": {
+    "production": {
+      "name": "pic-drm"
+    }
+  },
   "d1_databases": [
     {
       "binding": "DB",

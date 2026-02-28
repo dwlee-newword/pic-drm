@@ -3,11 +3,11 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy --minify",
+    "deploy": "wrangler deploy --minify --env=\"\"",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "build": "tsc --noEmit && wrangler deploy --dry-run --minify"
+    "build": "tsc --noEmit && wrangler deploy --dry-run --minify --env=\"\""
   },
   "dependencies": {
     "@hono/swagger-ui": "^0.5.3",
