@@ -1,7 +1,13 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
-import { sign, verify } from 'hono/jwt';
 import { HTTPException } from 'hono/http-exception';
+import { sign, verify } from 'hono/jwt';
 
+import type {
+  LoginResponse,
+  RefreshResponse,
+  RefreshTokenPayload,
+  SignupResponse
+} from '../types/auth';
 import {
   AuthErrorSchema,
   LoginRequestSchema,
@@ -9,15 +15,9 @@ import {
   RefreshRequestSchema,
   RefreshResponseSchema,
   SignupRequestSchema,
-  SignupResponseSchema,
+  SignupResponseSchema
 } from '../types/auth';
 import type { Bindings } from '../types/bindings';
-import type {
-  LoginResponse,
-  RefreshResponse,
-  RefreshTokenPayload,
-  SignupResponse,
-} from '../types/auth';
 
 /** Row shape returned from the users table. */
 type UserRow = {
@@ -40,13 +40,13 @@ async function hashPassword(password: string): Promise<string> {
     encoder.encode(password),
     { name: 'PBKDF2' },
     false,
-    ['deriveBits'],
+    ['deriveBits']
   );
 
   const derivedBits = await crypto.subtle.deriveBits(
     { name: 'PBKDF2', salt, iterations: 100_000, hash: 'SHA-256' },
     keyMaterial,
-    256,
+    256
   );
 
   const toHex = (arr: Uint8Array): string =>
@@ -73,13 +73,13 @@ export async function verifyPassword(password: string, storedHash: string): Prom
     encoder.encode(password),
     { name: 'PBKDF2' },
     false,
-    ['deriveBits'],
+    ['deriveBits']
   );
 
   const derivedBits = await crypto.subtle.deriveBits(
     { name: 'PBKDF2', salt, iterations: 100_000, hash: 'SHA-256' },
     keyMaterial,
-    256,
+    256
   );
 
   const derivedHex = Array.from(new Uint8Array(derivedBits))
@@ -129,19 +129,19 @@ const signupRoute = createRoute({
   request: {
     body: {
       content: { 'application/json': { schema: SignupRequestSchema } },
-      required: true,
-    },
+      required: true
+    }
   },
   responses: {
     201: {
       description: 'Account created successfully',
-      content: { 'application/json': { schema: SignupResponseSchema } },
+      content: { 'application/json': { schema: SignupResponseSchema } }
     },
     409: {
       description: 'Email is already registered',
-      content: { 'application/json': { schema: AuthErrorSchema } },
-    },
-  },
+      content: { 'application/json': { schema: AuthErrorSchema } }
+    }
+  }
 });
 
 /** POST /auth/login route definition for OpenAPI. */
@@ -155,19 +155,19 @@ const loginRoute = createRoute({
   request: {
     body: {
       content: { 'application/json': { schema: LoginRequestSchema } },
-      required: true,
-    },
+      required: true
+    }
   },
   responses: {
     200: {
       description: 'Login successful',
-      content: { 'application/json': { schema: LoginResponseSchema } },
+      content: { 'application/json': { schema: LoginResponseSchema } }
     },
     401: {
       description: 'Invalid credentials',
-      content: { 'application/json': { schema: AuthErrorSchema } },
-    },
-  },
+      content: { 'application/json': { schema: AuthErrorSchema } }
+    }
+  }
 });
 
 /** POST /auth/refresh route definition for OpenAPI. */
@@ -180,19 +180,19 @@ const refreshRoute = createRoute({
   request: {
     body: {
       content: { 'application/json': { schema: RefreshRequestSchema } },
-      required: true,
-    },
+      required: true
+    }
   },
   responses: {
     200: {
       description: 'New access token issued',
-      content: { 'application/json': { schema: RefreshResponseSchema } },
+      content: { 'application/json': { schema: RefreshResponseSchema } }
     },
     401: {
       description: 'Invalid or expired refresh token',
-      content: { 'application/json': { schema: AuthErrorSchema } },
-    },
-  },
+      content: { 'application/json': { schema: AuthErrorSchema } }
+    }
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -211,9 +211,7 @@ authRouter.openapi(signupRoute, async (c) => {
   const passwordHash = await hashPassword(password);
 
   try {
-    await c.env.DB.prepare(
-      'INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)',
-    )
+    await c.env.DB.prepare('INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)')
       .bind(email, name, passwordHash)
       .run();
   } catch (err) {
@@ -225,10 +223,13 @@ authRouter.openapi(signupRoute, async (c) => {
 
   const [access_token, refresh_token] = await Promise.all([
     buildAccessToken(email, name, c.env.JWT_SECRET),
-    buildRefreshToken(email, c.env.JWT_SECRET),
+    buildRefreshToken(email, c.env.JWT_SECRET)
   ]);
 
-  return c.json({ access_token, refresh_token, user: { email, name } } satisfies SignupResponse, 201);
+  return c.json(
+    { access_token, refresh_token, user: { email, name } } satisfies SignupResponse,
+    201
+  );
 });
 
 /**
@@ -239,7 +240,7 @@ authRouter.openapi(loginRoute, async (c) => {
   const { email, password } = c.req.valid('json');
 
   const user = await c.env.DB.prepare(
-    'SELECT email, name, password_hash FROM users WHERE email = ?',
+    'SELECT email, name, password_hash FROM users WHERE email = ?'
   )
     .bind(email)
     .first<UserRow>();
@@ -255,12 +256,16 @@ authRouter.openapi(loginRoute, async (c) => {
 
   const [access_token, refresh_token] = await Promise.all([
     buildAccessToken(user.email, user.name, c.env.JWT_SECRET),
-    buildRefreshToken(user.email, c.env.JWT_SECRET),
+    buildRefreshToken(user.email, c.env.JWT_SECRET)
   ]);
 
   return c.json(
-    { access_token, refresh_token, user: { email: user.email, name: user.name } } satisfies LoginResponse,
-    200,
+    {
+      access_token,
+      refresh_token,
+      user: { email: user.email, name: user.name }
+    } satisfies LoginResponse,
+    200
   );
 });
 
