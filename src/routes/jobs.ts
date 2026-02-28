@@ -1,7 +1,7 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { HTTPException } from 'hono/http-exception';
 
-import { authenticateAdmin } from '../middleware/adminAuth';
+import { authenticate } from '../middleware/auth';
 import type { Bindings, Variables } from '../types/bindings';
 import {
   CreateDraftRequestSchema,
@@ -38,8 +38,8 @@ type PendingIndexRow = {
   file_index: number;
 };
 
-// Apply admin JWT authentication to all /jobs/* routes.
-jobsRouter.use('/jobs/*', authenticateAdmin);
+// Apply user JWT authentication to all /jobs/* routes.
+jobsRouter.use('/jobs/*', authenticate);
 
 // ---------------------------------------------------------------------------
 // Shared parameter schemas
@@ -226,7 +226,7 @@ const completeJobRoute = createRoute({
  * The job status is set to 'draft' until POST /jobs/:jobId/submit is called.
  */
 jobsRouter.openapi(createDraftRoute, async (c) => {
-  const { sub: userEmail } = c.var.adminPayload;
+  const { sub: userEmail } = c.var.jwtPayload;
   const { security, recipients, fileMeta } = c.req.valid('json');
 
   const jobId = crypto.randomUUID();
@@ -240,7 +240,7 @@ jobsRouter.openapi(createDraftRoute, async (c) => {
   // Insert the draft job
   await c.env.DB.prepare(
     `INSERT INTO jobs
-       (id, admin_email, security_text, anti_screenshot, anti_copy, view_limit, domain_restrict, expiration, status, total_files, uploaded_files)
+       (id, user_email, security_text, anti_screenshot, anti_copy, view_limit, domain_restrict, expiration, status, total_files, uploaded_files)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, 0)`,
   )
     .bind(
@@ -282,10 +282,10 @@ jobsRouter.openapi(createDraftRoute, async (c) => {
  * This operation is idempotent: re-uploading the same fileIndex does not double-increment
  * the uploaded_files counter because the DB update is guarded by `upload_status='pending'`.
  *
- * Ownership is enforced via a JOIN on admin_email — returns 404 if the job belongs to another user.
+ * Ownership is enforced via a JOIN on user_email — returns 404 if the job belongs to another user.
  */
 jobsRouter.openapi(uploadFileRoute, async (c) => {
-  const { sub: userEmail } = c.var.adminPayload;
+  const { sub: userEmail } = c.var.jwtPayload;
   const { jobId, fileIndex } = c.req.valid('param');
 
   // Verify ownership and retrieve the pre-assigned storage key
@@ -293,7 +293,7 @@ jobsRouter.openapi(uploadFileRoute, async (c) => {
     `SELECT jf.storage_key, jf.upload_status
      FROM job_files jf
      INNER JOIN jobs j ON j.id = jf.job_id
-     WHERE jf.job_id = ? AND jf.file_index = ? AND j.admin_email = ? AND j.status = 'draft'`,
+     WHERE jf.job_id = ? AND jf.file_index = ? AND j.user_email = ? AND j.status = 'draft'`,
   )
     .bind(jobId, fileIndex, userEmail)
     .first<FileRow>();
@@ -355,11 +355,11 @@ jobsRouter.openapi(uploadFileRoute, async (c) => {
  * Returns 400 if the job is not in draft state or not all files have been uploaded.
  */
 jobsRouter.openapi(submitJobRoute, async (c) => {
-  const { sub: userEmail } = c.var.adminPayload;
+  const { sub: userEmail } = c.var.jwtPayload;
   const { jobId } = c.req.valid('param');
 
   const jobRow = await c.env.DB.prepare(
-    `SELECT total_files, uploaded_files, status FROM jobs WHERE id = ? AND admin_email = ?`,
+    `SELECT total_files, uploaded_files, status FROM jobs WHERE id = ? AND user_email = ?`,
   )
     .bind(jobId, userEmail)
     .first<JobRow>();
@@ -390,11 +390,11 @@ jobsRouter.openapi(submitJobRoute, async (c) => {
  * Returns the list of file indices that still need to be uploaded (pendingIndices).
  */
 jobsRouter.openapi(getJobStatusRoute, async (c) => {
-  const { sub: userEmail } = c.var.adminPayload;
+  const { sub: userEmail } = c.var.jwtPayload;
   const { jobId } = c.req.valid('param');
 
   const jobRow = await c.env.DB.prepare(
-    `SELECT total_files, uploaded_files, status FROM jobs WHERE id = ? AND admin_email = ?`,
+    `SELECT total_files, uploaded_files, status FROM jobs WHERE id = ? AND user_email = ?`,
   )
     .bind(jobId, userEmail)
     .first<JobRow>();
@@ -436,11 +436,11 @@ jobsRouter.openapi(getJobStatusRoute, async (c) => {
  * Returns 400 if the job is not in pending state.
  */
 jobsRouter.openapi(completeJobRoute, async (c) => {
-  const { sub: userEmail } = c.var.adminPayload;
+  const { sub: userEmail } = c.var.jwtPayload;
   const { jobId } = c.req.valid('param');
 
   const jobRow = await c.env.DB.prepare(
-    `SELECT status FROM jobs WHERE id = ? AND admin_email = ?`,
+    `SELECT status FROM jobs WHERE id = ? AND user_email = ?`,
   )
     .bind(jobId, userEmail)
     .first<Pick<JobRow, 'status'>>();
