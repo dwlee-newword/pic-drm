@@ -239,6 +239,7 @@ authRouter.openapi(signupRoute, async (c) => {
 authRouter.openapi(loginRoute, async (c) => {
   const { email, password } = c.req.valid('json');
 
+  console.log(email);
   const user = await c.env.DB.prepare(
     'SELECT email, name, password_hash FROM users WHERE email = ?'
   )
