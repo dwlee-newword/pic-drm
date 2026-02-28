@@ -8,26 +8,27 @@
       "name": "pic-drm",
       "vars": {
         "ENVIRONMENT": "production",
-        "ALLOWED_ORIGIN": "https://citrusletter.com,https://citrus-letter.pages.dev"
+        "ALLOWED_ORIGIN": "https://citrusletter.com,https://citrus-letter.pages.dev",
+        "d1_databases": [
+          {
+            "binding": "DB",
+            "database_name": "pic-drm-db",
+            // Replace with your own D1 database ID: `wrangler d1 create pic-drm-db`
+            "database_id": "441bf9e1-04bf-46b9-aab5-7db82e86c1cc",
+            "migrations_dir": "migrations"
+          }
+        ],
+        "r2_buckets": [
+          {
+            "binding": "BUCKET",
+            // Replace with your own R2 bucket name: `wrangler r2 bucket create pic-drm-files`
+            "bucket_name": "pic-drm-files"
+          }
+        ]
       }
     }
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "pic-drm-db",
-      // Replace with your own D1 database ID: `wrangler d1 create pic-drm-db`
-      "database_id": "441bf9e1-04bf-46b9-aab5-7db82e86c1cc",
-      "migrations_dir": "migrations"
-    }
-  ],
-  "r2_buckets": [
-    {
-      "binding": "BUCKET",
-      // Replace with your own R2 bucket name: `wrangler r2 bucket create pic-drm-files`
-      "bucket_name": "pic-drm-files"
-    }
-  ]
+  }
+
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],
