@@ -1,0 +1,4 @@
+-- Migration 0005: intentionally left as no-op.
+-- The original ALTER TABLE RENAME COLUMN user_email TO admin_email was dropped
+-- because jobs are now owned by regular users, not admin users.
+-- The column remains user_email as created in 0002_create_jobs.sql.
