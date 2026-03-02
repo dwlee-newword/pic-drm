@@ -86,7 +86,24 @@ export async function verifyPassword(password: string, storedHash: string): Prom
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
 
-  return derivedHex === expectedHex;
+  return constantTimeEqual(derivedHex, expectedHex);
+}
+
+/**
+ * Compares two strings in constant time to prevent timing attacks.
+ * @param a - First string
+ * @param b - Second string
+ * @returns `true` if the strings are equal, `false` otherwise
+ */
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
 }
 
 /**
@@ -256,14 +273,16 @@ authRouter.openapi(loginRoute, async (c) => {
     });
   }
 
-  if (!user) {
-    throw new HTTPException(401, { message: 'Invalid email or password.' });
-  }
-
   // Step 2: Verify the submitted password against the stored PBKDF2 hash.
-  let isValid: boolean;
+  // If user is not found, verify against a dummy hash to prevent timing attacks.
+  let isValid = false;
   try {
-    isValid = await verifyPassword(password, user.password_hash);
+    if (user) {
+      isValid = await verifyPassword(password, user.password_hash);
+    } else {
+      // Run dummy verification to keep response time consistent
+      await hashPassword(password);
+    }
   } catch (err) {
     throw new HTTPException(500, {
       message: 'Login failed: password verification error.',
@@ -271,7 +290,7 @@ authRouter.openapi(loginRoute, async (c) => {
     });
   }
 
-  if (!isValid) {
+  if (!user || !isValid) {
     throw new HTTPException(401, { message: 'Invalid email or password.' });
   }
 

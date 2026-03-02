@@ -175,7 +175,11 @@ export const adminAuthRouter = new OpenAPIHono<{ Bindings: Bindings }>();
  * Passwords are hashed with PBKDF2 (100k iterations, SHA-256) before storage.
  */
 adminAuthRouter.openapi(adminSignupRoute, async (c) => {
-  const { email, name, password } = c.req.valid('json');
+  const { email, name, password, admin_signup_token } = c.req.valid('json');
+
+  if (admin_signup_token !== c.env.ADMIN_SIGNUP_TOKEN) {
+    throw new HTTPException(403, { message: 'Invalid admin signup token.' });
+  }
 
   const passwordHash = await hashPassword(password);
 
@@ -213,12 +217,15 @@ adminAuthRouter.openapi(adminLoginRoute, async (c) => {
     .bind(email)
     .first<AdminUserRow>();
 
-  if (!user) {
-    throw new HTTPException(401, { message: 'Invalid email or password.' });
+  let isValid = false;
+  if (user) {
+    isValid = await verifyPassword(password, user.password_hash);
+  } else {
+    // Run dummy verification to prevent user enumeration via timing attacks
+    await hashPassword(password);
   }
 
-  const isValid = await verifyPassword(password, user.password_hash);
-  if (!isValid) {
+  if (!user || !isValid) {
     throw new HTTPException(401, { message: 'Invalid email or password.' });
   }
 

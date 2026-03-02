@@ -22,6 +22,9 @@ export const AdminSignupRequestSchema = z
       .min(8)
       .max(100)
       .openapi({ example: 'secret1234', description: 'Password (8–100 characters).' }),
+    admin_signup_token: z
+      .string()
+      .openapi({ description: 'Secret token required to register an admin account.' }),
   })
   .openapi('AdminSignupRequest');
 

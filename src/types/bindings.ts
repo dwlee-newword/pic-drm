@@ -21,6 +21,8 @@ export type Bindings = {
   DB: D1Database;
   /** Cloudflare R2 bucket for storing protected files. Declared in wrangler.jsonc as `"binding": "BUCKET"`. */
   BUCKET: R2Bucket;
+  /** Secret token required to register an admin account. */
+  ADMIN_SIGNUP_TOKEN: string;
 };
 
 /**
